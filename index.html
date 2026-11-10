@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pressure Test — split or steal against a decision model</title>
+<meta name="description" content="Play split-or-steal against the decision models on Pollinations, or let them play each other in a tournament. Every move comes with the model's own probabilities." />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="bar">
+  <a class="brand" href="./">Pressure Test</a>
+  <p class="tag">Split or steal. The model shows its odds.</p>
+  <button id="pollen-pill" class="pill" type="button">Connect Pollen</button>
+</header>
+
+<main>
+  <nav class="tabs" role="tablist">
+    <button class="tab on" type="button" data-tab="play" role="tab">Play a model</button>
+    <button class="tab" type="button" data-tab="tournament" role="tab">Tournament</button>
+  </nav>
+
+  <section id="panel-play" class="panel">
+    <div class="row between">
+      <div class="models" id="models"></div>
+      <label class="rounds">Rounds
+        <select id="rounds">
+          <option>6</option>
+          <option>10</option>
+          <option>3</option>
+        </select>
+      </label>
+    </div>
+
+    <div class="score">
+      <div class="score-side"><span class="who">You</span><strong id="you-total">0</strong></div>
+      <div class="round-count" id="round-count">round 1</div>
+      <div class="score-side right"><span class="who" id="model-name">model</span><strong id="them-total">0</strong></div>
+    </div>
+
+    <div class="moves">
+      <button id="split" class="move split" type="button" disabled>
+        <strong>Split</strong><span>3 each if they split, 0 if they steal</span>
+      </button>
+      <button id="steal" class="move steal" type="button" disabled>
+        <strong>Steal</strong><span>5 if they split, 1 each if both steal</span>
+      </button>
+    </div>
+
+    <p class="hint" id="play-hint">Pick a model, connect your Pollen, then choose a move.</p>
+    <ol class="log" id="log"></ol>
+  </section>
+
+  <section id="panel-tournament" class="panel" hidden>
+    <p class="hint">Every pair plays one game of four rounds. Both models decide from the same
+      history, before either move is revealed.</p>
+    <div class="models" id="tour-models"></div>
+    <div class="row">
+      <button id="run-tour" class="go" type="button">Run tournament</button>
+      <button id="clear-tour" class="ghost" type="button">Clear</button>
+    </div>
+    <p class="hint" id="tour-hint"></p>
+    <table class="board" id="board">
+      <thead><tr><th>Model</th><th>Points</th><th>Split</th><th>Steal</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    <ol class="log" id="tour-log"></ol>
+  </section>
+
+  <section class="about">
+    <p>Decision models answer with a choice <em>and</em> a probability for each option, which makes
+      them unusually honest opponents: this app shows the distribution it sampled from, so a 70%
+      steal is visible as a 70% steal and not as a mystery. The game is the one from the decision
+      benchmark write-ups: cooperate for a small shared payoff, or defect for a bigger one-sided
+      payoff that collapses if both defect. Payoffs here are 3/3, 0/5, 5/0 and 1/1.</p>
+    <p>Play and tournament both spend the reader's own
+      <a href="https://github.com/pollinations/pollinations/blob/main/BRING_YOUR_OWN_POLLEN.md" rel="noopener">Pollen</a>
+      through <code>gen.pollinations.ai/alpha/decisions</code>. Nothing is stored server-side.</p>
+  </section>
+</main>
+
+<footer class="foot">
+  <a href="https://pollinations.ai/?ref=badge" rel="noopener">
+    <img src="https://raw.githubusercontent.com/pollinations/pollinations/main/packages/ui/src/brand/badge-made-with.svg" alt="Made with pollinations.ai" height="28" />
+  </a>
+</footer>
+
+<dialog id="connect">
+  <h2>Connect your Pollen</h2>
+  <button id="device" class="go" type="button">Sign in with a code</button>
+  <p id="device-code" class="code" hidden></p>
+  <details>
+    <summary>Or paste an sk_ key</summary>
+    <div class="row">
+      <input id="sk" type="password" placeholder="sk_…" autocomplete="off" />
+      <button id="use-sk" class="ghost" type="button">Use key</button>
+    </div>
+  </details>
+  <p id="connect-msg" class="hint"></p>
+  <button id="close-connect" class="ghost wide" type="button">Close</button>
+</dialog>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>

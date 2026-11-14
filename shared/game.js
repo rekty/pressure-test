@@ -83,6 +83,21 @@ export function tally(rows) {
     .sort((a, b) => b.points - a.points);
 }
 
+// Decision models that answer a `choice` question and spend no paid Pollen.
+// `respan/span-01-lite` is free and on /alpha/decisions, but it only answers
+// `noul` questions, so the split-or-steal `choice` this game asks is rejected.
+const NOUL_ONLY = new Set(["respan/span-01-lite"]);
+
+export function freeDecisionModels(list) {
+  return (list || []).filter(
+    (model) =>
+      model?.name &&
+      model.paid_only !== true &&
+      !NOUL_ONLY.has(model.name) &&
+      (model.supported_endpoints || []).includes("/alpha/decisions"),
+  );
+}
+
 // Round robin pairing for a tournament of 3+ models, one game per pair.
 export function fixtures(models) {
   const pairs = [];

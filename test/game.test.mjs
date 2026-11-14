@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { payoff, sample, normalise, fixtures, tally, stateFor, question } from "../shared/game.js";
+import { payoff, sample, normalise, fixtures, tally, stateFor, question, freeDecisionModels } from "../shared/game.js";
 
 test("payoff matrix matches the rules shown in the app", () => {
   assert.deepEqual(payoff("split", "split"), [3, 3]);
@@ -62,6 +62,22 @@ test("round robin gives every pair exactly one fixture", () => {
   const pairs = fixtures(["a", "b", "c"]);
   assert.equal(pairs.length, 3);
   assert.deepEqual(pairs, [["a", "b"], ["a", "c"], ["b", "c"]]);
+});
+
+test("only free decision models are offered to a free-Pollen visitor", () => {
+  const catalogue = [
+    { name: "microsoft/microsoft-decision-1", paid_only: false, supported_endpoints: ["/alpha/decisions"] },
+    { name: "typesafe/jev-1.14", paid_only: true, supported_endpoints: ["/alpha/decisions"] },
+    { name: "openai/gpt-5.4-nano", paid_only: false, supported_endpoints: ["/v1/chat/completions"] },
+    { name: "vllm-sr/d3", paid_only: false, supported_endpoints: ["/alpha/decisions", "/v1/chat/completions"] },
+    { name: "respan/span-01-lite", paid_only: false, supported_endpoints: ["/alpha/decisions"] },
+    { paid_only: false, supported_endpoints: ["/alpha/decisions"] },
+  ];
+  assert.deepEqual(
+    freeDecisionModels(catalogue).map((model) => model.name),
+    ["microsoft/microsoft-decision-1", "vllm-sr/d3"],
+  );
+  assert.deepEqual(freeDecisionModels(undefined), []);
 });
 
 test("tally sums points and sorts descending", () => {

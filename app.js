@@ -1,15 +1,18 @@
 import * as pollen from "./shared/pollen.js";
-import { payoff, sample, stateFor, question, fixtures, tally } from "./shared/game.js";
+import { payoff, sample, stateFor, question, fixtures, tally, freeDecisionModels } from "./shared/game.js";
 
+// Free decision models lead, so a visitor with only free Pollen can play and run
+// the tournament without a 402. The paid ones stay selectable further down.
+// `respan/span-01-lite` is absent on purpose: it only answers `noul` questions,
+// so it cannot answer the split-or-steal `choice` this game asks.
 const FALLBACK = [
-  ["typesafe/jev-1.14", "Jev"],
   ["microsoft/microsoft-decision-1", "Microsoft"],
+  ["vllm-sr/d3", "D3"],
+  ["typesafe/jev-1.14", "Jev"],
   ["openai/gpt-6-luna-decisions", "Luna"],
   ["perplexity/pplx-decider-v1.2", "Decider"],
   ["jaredpalmer/kev-4b", "Kev"],
   ["liquid/d1", "Liquid"],
-  ["vllm-sr/d3", "D3"],
-  ["respan/span-01-lite", "Span"],
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -23,7 +26,8 @@ const el = (tag, cls, text) => {
 const state = {
   list: FALLBACK,
   playModel: FALLBACK[0][0],
-  tourPicked: new Set(FALLBACK.slice(0, 4).map(([id]) => id)),
+  // The tournament opens with the free pair; the other models are opt-in.
+  tourPicked: new Set(FALLBACK.slice(0, 2).map(([id]) => id)),
   history: [],
   round: 1,
   totals: { you: 0, them: 0 },
@@ -335,12 +339,17 @@ function loadModels() {
   pollen
     .models()
     .then((list) => {
-      const decision = list
-        .filter((m) => (m.supported_endpoints || []).includes("/alpha/decisions"))
-        .map((m) => [m.name, m.title || m.name.split("/").slice(-1)[0]]);
+      const decision = freeDecisionModels(list).map((m) => [
+        m.name,
+        m.title || m.name.split("/").slice(-1)[0],
+      ]);
       if (decision.length >= 2) {
         state.list = decision;
         if (!decision.some(([id]) => id === state.playModel)) state.playModel = decision[0][0];
+        // A paid pick from the fallback list would 402; keep the opening pair free.
+        if (!decision.some(([id]) => state.tourPicked.has(id))) {
+          state.tourPicked = new Set(decision.slice(0, 2).map(([id]) => id));
+        }
         renderModels();
         renderTourModels();
         $("model-name").textContent = labelOf(state.playModel);
